@@ -41,8 +41,8 @@ class BotAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         botEngine = BotEngine(
             captureScreenshot = { captureScreenshot() },
-            performSwipe = { startX, startY, endX, endY ->
-                dispatchSwipe(startX, startY, endX, endY)
+            performGesture = { path, durationMillis ->
+                dispatchGesturePath(path, durationMillis)
             }
         )
 
@@ -164,13 +164,12 @@ class BotAccessibilityService : AccessibilityService() {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
-    private fun dispatchSwipe(
-        startX: Float,
-        startY: Float,
-        endX: Float,
-        endY: Float
-    ): Boolean {
+    private fun dispatchGesturePath(points: List<android.graphics.PointF>, durationMillis: Long): Boolean {
         return try {
+            if (points.size < 2 || durationMillis <= 0L) {
+                Log.e(TAG, "Wischpfad oder Dauer ist ungültig")
+                return false
+            }
             val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
             val bounds = windowManager.currentWindowMetrics.bounds
             if (bounds.width() <= 0 || bounds.height() <= 0) {
@@ -186,12 +185,14 @@ class BotAccessibilityService : AccessibilityService() {
                 (bounds.top + y * bounds.height() / VIRTUAL_HEIGHT)
                     .coerceIn(bounds.top.toFloat(), (bounds.bottom - 1).toFloat())
 
-            val path = Path().apply {
-                moveTo(screenX(startX), screenY(startY))
-                lineTo(screenX(endX), screenY(endY))
+            val screenPath = Path().apply {
+                moveTo(screenX(points.first().x), screenY(points.first().y))
+                points.drop(1).forEach { point ->
+                    lineTo(screenX(point.x), screenY(point.y))
+                }
             }
             val gesture = GestureDescription.Builder()
-                .addStroke(GestureDescription.StrokeDescription(path, 0L, SWIPE_DURATION_MS))
+                .addStroke(GestureDescription.StrokeDescription(screenPath, 0L, durationMillis))
                 .build()
             dispatchGesture(gesture, null, null)
         } catch (error: SecurityException) {
@@ -213,6 +214,5 @@ class BotAccessibilityService : AccessibilityService() {
         private const val TAG = "BotAccessibility"
         private const val VIRTUAL_WIDTH = 1280f
         private const val VIRTUAL_HEIGHT = 720f
-        private const val SWIPE_DURATION_MS = 200L
     }
 }

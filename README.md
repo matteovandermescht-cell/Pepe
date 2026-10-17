@@ -35,13 +35,20 @@ Screen capture is provided by the enabled Accessibility service through its
 declared screenshot capability; the app does not use MediaProjection.
 
 The accessibility API captures the default display; this app does not use
-MediaProjection or ImageReader. It samples a vertical line at the screen center,
-scaled from the configured 1280x720 reference coordinates, every 500 ms
-(nominally at most two captures per second). Color
-matching uses tolerances around the sample RGB colors; it is a simple heuristic,
-not robust scene recognition. Secure windows, game-specific color effects,
-letterboxing, rotation, UI overlays, or changed game layouts can make results
-inaccurate. Validate against real screenshots from the target app before use.
+MediaProjection or ImageReader. It samples small grayscale patches around the
+player and eight nearby directions every 500 ms (nominally at most two captures
+per second). Sobel edge density and grayscale variance are used as a color-
+independent bush-texture heuristic; HSV green ratio plus low edge density
+estimates flat toxic-zone patches. These thresholds are heuristic, not trained
+or calibrated against a particular game. Secure windows, game-specific
+effects, letterboxing, rotation, UI overlays, or changed layouts can make
+results inaccurate. Validate against real screenshots from the target app.
+
+Directional joystick paths last 450 ms and are renewed on the 500 ms loop.
+When the center patch looks bush-like, the joystick traces a circular path;
+when the center or nearby sector looks like a flat toxic-green zone, the bot
+heads toward the strongest nearby bush-like patch. These are local visual
+heuristics, not map-wide path planning or a guarantee of a safe destination.
 
 The 90/120 Hz display refresh rate does not increase this polling rate. A brief
 color change between screenshots can be missed. Screenshot and gesture access
