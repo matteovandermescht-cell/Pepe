@@ -14,6 +14,7 @@ import android.widget.TextView
 
 class MainActivity : Activity() {
     private lateinit var statusText: TextView
+    private lateinit var accessibilityHelpButton: Button
     private var setupInProgress = false
     private var waitingForSettings = false
     private var pendingSettingsRequest = NO_SETTINGS_REQUEST
@@ -25,6 +26,8 @@ class MainActivity : Activity() {
         waitingForSettings = savedInstanceState?.getBoolean(STATE_WAITING_FOR_SETTINGS) ?: false
         pendingSettingsRequest =
             savedInstanceState?.getInt(STATE_PENDING_SETTINGS_REQUEST) ?: NO_SETTINGS_REQUEST
+        val showAccessibilityHelp =
+            savedInstanceState?.getBoolean(STATE_SHOW_ACCESSIBILITY_HELP) ?: false
 
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -50,6 +53,13 @@ class MainActivity : Activity() {
             }
         }, matchWidth())
 
+        accessibilityHelpButton = Button(this).apply {
+            text = getString(R.string.open_app_info)
+            visibility = if (showAccessibilityHelp) android.view.View.VISIBLE else android.view.View.GONE
+            setOnClickListener { openAppInfoSettings() }
+        }
+        content.addView(accessibilityHelpButton, matchWidth())
+
         setContentView(content)
     }
 
@@ -57,6 +67,10 @@ class MainActivity : Activity() {
         outState.putBoolean(STATE_SETUP_IN_PROGRESS, setupInProgress)
         outState.putBoolean(STATE_WAITING_FOR_SETTINGS, waitingForSettings)
         outState.putInt(STATE_PENDING_SETTINGS_REQUEST, pendingSettingsRequest)
+        outState.putBoolean(
+            STATE_SHOW_ACCESSIBILITY_HELP,
+            accessibilityHelpButton.visibility == android.view.View.VISIBLE
+        )
         super.onSaveInstanceState(outState)
     }
 
@@ -77,9 +91,17 @@ class MainActivity : Activity() {
 
             ACCESSIBILITY_SETTINGS_REQUEST -> {
                 if (!isAccessibilityServiceEnabled()) {
-                    stopSetup(R.string.accessibility_permission_missing)
+                    showAccessibilityRestrictedHelp()
                     return
                 }
+            }
+
+            APP_INFO_SETTINGS_REQUEST -> {
+                if (!Settings.canDrawOverlays(this)) {
+                    stopSetup(R.string.overlay_permission_missing)
+                    return
+                }
+                setupInProgress = true
             }
         }
         continueSetup()
@@ -138,6 +160,7 @@ class MainActivity : Activity() {
         setupInProgress = false
         waitingForSettings = false
         pendingSettingsRequest = NO_SETTINGS_REQUEST
+        accessibilityHelpButton.visibility = android.view.View.GONE
         statusText.setText(R.string.setup_complete)
 
         try {
@@ -156,6 +179,23 @@ class MainActivity : Activity() {
         statusText.setText(message)
     }
 
+    private fun showAccessibilityRestrictedHelp() {
+        setupInProgress = false
+        waitingForSettings = false
+        pendingSettingsRequest = NO_SETTINGS_REQUEST
+        statusText.setText(R.string.accessibility_restricted_settings_help)
+        accessibilityHelpButton.visibility = android.view.View.VISIBLE
+    }
+
+    private fun openAppInfoSettings() {
+        setupInProgress = true
+        val intent = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.parse("package:$packageName")
+        )
+        openSettings(intent, APP_INFO_SETTINGS_REQUEST, R.string.open_app_info)
+    }
+
     private fun matchWidth() = LinearLayout.LayoutParams(
         ViewGroup.LayoutParams.MATCH_PARENT,
         ViewGroup.LayoutParams.WRAP_CONTENT
@@ -167,8 +207,10 @@ class MainActivity : Activity() {
         const val NO_SETTINGS_REQUEST = 0
         const val OVERLAY_SETTINGS_REQUEST = 1001
         const val ACCESSIBILITY_SETTINGS_REQUEST = 1002
+        const val APP_INFO_SETTINGS_REQUEST = 1003
         const val STATE_SETUP_IN_PROGRESS = "setup_in_progress"
         const val STATE_WAITING_FOR_SETTINGS = "waiting_for_settings"
         const val STATE_PENDING_SETTINGS_REQUEST = "pending_settings_request"
+        const val STATE_SHOW_ACCESSIBILITY_HELP = "show_accessibility_help"
     }
 }

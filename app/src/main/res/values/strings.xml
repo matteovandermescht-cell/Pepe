@@ -13,6 +13,8 @@
     <string name="setup_complete">Berechtigungen erteilt. Das schwebende Overlay ist gestartet. Tippe dort auf START, um den Bot zu starten.</string>
     <string name="overlay_permission_missing">Overlay-Zugriff wurde nicht erteilt. Tippe auf den Button, um es erneut zu versuchen.</string>
     <string name="accessibility_permission_missing">Barrierefreiheit wurde nicht aktiviert. Tippe auf den Button, um es erneut zu versuchen.</string>
+    <string name="accessibility_restricted_settings_help">Der Dienst wurde nicht aktiviert. Falls er ausgegraut ist: Bitte gehe zu Einstellungen → Apps → Deine App → Drei-Punkte-Menü oben rechts → „Eingeschränkte Einstellungen zulassen“ und bestätige. Danach kannst du den Barrierefreiheitsdienst aktivieren. Dieser Dienst ist für Bildschirm-Screenshots und Gestensteuerung erforderlich; ohne ihn kann der Bot nicht laufen.</string>
+    <string name="open_app_info">App-Info öffnen</string>
     <string name="settings_unavailable">Die benötigte Android-Einstellungsseite konnte nicht geöffnet werden.</string>
     <string name="overlay_service_failed">Das Overlay konnte nicht gestartet werden. Prüfe die Berechtigungen und versuche es erneut.</string>
 </resources>

@@ -24,6 +24,12 @@ artifact for each push, pull request, or manual workflow run.
 4. The floating overlay starts automatically. Tap its **START** button to run
    the bot and tap again to stop it.
 
+If the Accessibility service is disabled or Android denies screenshot access,
+the app explains the issue and stops the bot rather than sending gestures based
+on missing screenshots. If Android shows the service as restricted, open the
+app-info page from the setup screen and use its three-dot menu to allow
+restricted settings, then return and enable the service.
+
 There is no separate screen-capture settings page for this implementation.
 Screen capture is provided by the enabled Accessibility service through its
 declared screenshot capability; the app does not use MediaProjection.

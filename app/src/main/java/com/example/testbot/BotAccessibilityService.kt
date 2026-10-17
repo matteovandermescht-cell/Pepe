@@ -14,6 +14,7 @@ import android.hardware.HardwareBuffer
 import android.util.Log
 import android.view.Display
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -87,6 +88,7 @@ class BotAccessibilityService : AccessibilityService() {
                             var buffer: HardwareBuffer? = null
                             var wrappedBitmap: Bitmap? = null
                             var softwareBitmap: Bitmap? = null
+                            var processingFailure: Exception? = null
                             try {
                                 val hardwareBuffer = screenshot.hardwareBuffer
                                 buffer = hardwareBuffer
@@ -98,29 +100,69 @@ class BotAccessibilityService : AccessibilityService() {
                                     ?: throw IllegalStateException("Screenshot konnte nicht kopiert werden")
                             } catch (error: Exception) {
                                 Log.e(TAG, "Screenshot konnte nicht verarbeitet werden", error)
+                                processingFailure = error
                             } finally {
                                 wrappedBitmap?.recycle()
                                 buffer?.close()
                             }
 
                             if (continuation.isActive) {
-                                continuation.resume(softwareBitmap)
+                                if (processingFailure != null || softwareBitmap == null) {
+                                    reportScreenshotFailure(
+                                        "Screenshot-Bild konnte nicht verarbeitet werden. " +
+                                            "Prüfe, ob der Accessibility-Service aktiv ist und Screenshots erlaubt."
+                                    )
+                                    continuation.resume(null)
+                                } else {
+                                    continuation.resume(softwareBitmap)
+                                }
                             } else {
                                 softwareBitmap?.recycle()
                             }
                         }
 
                         override fun onFailure(errorCode: Int) {
-                            Log.e(TAG, "Screenshot fehlgeschlagen (Fehlercode $errorCode)")
-                            if (continuation.isActive) continuation.resume(null)
+                            val message = screenshotErrorMessage(errorCode)
+                            Log.e(TAG, "$message (Fehlercode $errorCode)")
+                            if (continuation.isActive) {
+                                reportScreenshotFailure(message)
+                                continuation.resume(null)
+                            }
                         }
                     }
                 )
             } catch (error: Exception) {
                 Log.e(TAG, "Screenshot-Aufnahme konnte nicht gestartet werden", error)
-                if (continuation.isActive) continuation.resume(null)
+                if (continuation.isActive) {
+                    reportScreenshotFailure(
+                        "Screenshot-Aufnahme konnte nicht gestartet werden. " +
+                            "Prüfe, ob der Accessibility-Service aktiv ist."
+                    )
+                    continuation.resume(null)
+                }
             }
         }
+
+    private fun screenshotErrorMessage(errorCode: Int): String =
+        when (errorCode) {
+            ERROR_TAKE_SCREENSHOT_NO_ACCESSIBILITY_ACCESS ->
+                "Android hat den Screenshot-Zugriff verweigert. Aktiviere den Color Bot Accessibility-Service."
+            ERROR_TAKE_SCREENSHOT_SECURE_WINDOW ->
+                "Android verweigert Screenshots für diesen geschützten Bildschirm."
+            ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT ->
+                "Android hat die Screenshot-Anfrage abgelehnt, weil die vorherige zu kurz zurückliegt."
+            ERROR_TAKE_SCREENSHOT_INVALID_DISPLAY ->
+                "Der Bildschirm für den Screenshot ist nicht verfügbar."
+            ERROR_TAKE_SCREENSHOT_INVALID_WINDOW ->
+                "Das Fenster für den Screenshot ist nicht verfügbar."
+            else ->
+                "Der Screenshot ist fehlgeschlagen. Prüfe die Accessibility-Berechtigung und versuche es erneut."
+        }
+
+    private fun reportScreenshotFailure(message: String) {
+        botEngine?.stop()
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
 
     private fun dispatchSwipe(
         startX: Float,
