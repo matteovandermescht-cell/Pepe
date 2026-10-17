@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Simple Color Bot</string>
+    <string name="accessibility_service_name">Color Bot test service</string>
+    <string name="accessibility_service_description">Vom Nutzer gestartetes technisches Testprojekt. Liest Bildschirm-Screenshots zur einfachen Pixel-Farberkennung und führt angeforderte Wischgesten aus.</string>
+    <string name="bot_notification_channel">Bot läuft</string>
+    <string name="bot_notification_title">Color Bot aktiv</string>
+    <string name="bot_notification_text">Das schwebende Bedienelement ist aktiv.</string>
+    <string name="overlay_fgs_subtype">User-visible floating control for a user-started local automation test.</string>
+    <string name="setup_button">Bot starten &amp; Rechte erteilen</string>
+    <string name="setup_instructions">Einmal tippen: erst Overlay-Zugriff, dann Barrierefreiheit erlauben. Die Bildschirmaufnahme wird über den Barrierefreiheitsdienst freigegeben; Android zeigt dafür keinen separaten Bildschirmaufnahme-Dialog.</string>
+    <string name="open_overlay_settings">Bitte „Über anderen Apps anzeigen“ erlauben. Danach geht es automatisch weiter.</string>
+    <string name="open_accessibility_settings">Bitte „Color Bot test service“ aktivieren und bestätigen. Danach startet das Overlay automatisch.</string>
+    <string name="setup_complete">Berechtigungen erteilt. Das schwebende Overlay ist gestartet. Tippe dort auf START, um den Bot zu starten.</string>
+    <string name="overlay_permission_missing">Overlay-Zugriff wurde nicht erteilt. Tippe auf den Button, um es erneut zu versuchen.</string>
+    <string name="accessibility_permission_missing">Barrierefreiheit wurde nicht aktiviert. Tippe auf den Button, um es erneut zu versuchen.</string>
+    <string name="settings_unavailable">Die benötigte Android-Einstellungsseite konnte nicht geöffnet werden.</string>
+    <string name="overlay_service_failed">Das Overlay konnte nicht gestartet werden. Prüfe die Berechtigungen und versuche es erneut.</string>
+</resources>
